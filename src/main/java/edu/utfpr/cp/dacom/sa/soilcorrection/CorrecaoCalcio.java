@@ -1,6 +1,6 @@
 package edu.utfpr.cp.dacom.sa.soilcorrection;
 
-public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcio> {
+public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcioMagnesio> {
 	/**
 	 * ---- NOTAS ----
 	 * 
@@ -14,6 +14,19 @@ public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcio> {
 		double qtdeCaOAdicionada
 	) {
 		return (qtdeCalcioNoSolo * participacaoNaCTCDesejada / participacaoAtualNaCTCDoSolo) - qtdeCalcioNoSolo - qtdeCaOAdicionada;
+	}
+	
+	// E49 = N54 = SE(C6=1;"45 a 55";SE(C6=2;"35 a 40";""))
+	public String getParticipacaoIdealNoCTCDoSolo(int texturaDoSoloId) {
+		if (texturaDoSoloId == 1) {
+			return "45 a 55";
+		}
+		
+		if (texturaDoSoloId == 2) {
+			return "35 a 40";
+		}
+		
+		return "";
 	}
 	
 	/* TO DO: Implementar método completo. */

@@ -12,7 +12,7 @@ public interface ICorrecaoNutriente<T extends IFonteNutriente> {
 
         return necessidade / fonteNutriente.getTeorFonte();
     }
-    
+
     public default double calculaCusto(double custoFonte, double qtdeAplicar) {
 
         if (custoFonte <= 0) {

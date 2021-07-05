@@ -2,7 +2,7 @@ package edu.utfpr.cp.dacom.sa.soilcorrection;
 
 import java.util.Set;
 
-public enum FonteCalcio implements IFonteNutriente {
+public enum FonteCalcioMagnesio implements IFonteNutriente {
 	/* TO DO: Implementar os valores */
 	CALCARIO_DOLOMITICO(0.28, Set.of()),
 	CALCARIO_CALCITICO(0.20, Set.of()),
@@ -14,7 +14,7 @@ public enum FonteCalcio implements IFonteNutriente {
     private final double teorFonte;
     private final Set<NutrienteAdicional> nutrientesAdicionais;
 
-	FonteCalcio(double teorFonte, final Set<NutrienteAdicional> nutrientesAdicionais) {
+	FonteCalcioMagnesio(double teorFonte, final Set<NutrienteAdicional> nutrientesAdicionais) {
 		this.teorFonte = teorFonte;
 		this.nutrientesAdicionais = nutrientesAdicionais;
 	}

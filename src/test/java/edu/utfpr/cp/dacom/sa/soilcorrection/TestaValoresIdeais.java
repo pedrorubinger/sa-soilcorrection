@@ -43,6 +43,20 @@ public class TestaValoresIdeais {
                                 TexturaSolo.TEXTURA_MEDIA.calculaValorIdeal().potassio());
 
         }
+        
+        @Test
+        public void testaValoresIdeaisParaParticipacaoIdealNaCTCDoSoloCalcio() {
+        	assertEquals("45 a 55", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(1));
+        	assertEquals("35 a 40", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(2));
+        	assertEquals("", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(3));
+        }
+        
+        @Test
+        public void testaValoresIdeaisParaParticipacaoIdealNaCTCDoSoloMagnesio() {
+        	assertEquals("10 a 15", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(1));
+        	assertEquals("8 a 12", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(2));
+        	assertEquals("", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(3));
+        }
 
         @Test
         public void testaCalculaSCmol() {
