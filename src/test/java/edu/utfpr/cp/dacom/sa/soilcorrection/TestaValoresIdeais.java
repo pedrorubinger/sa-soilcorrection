@@ -46,22 +46,21 @@ public class TestaValoresIdeais {
         
         @Test
         public void testaValoresIdeaisParaParticipacaoIdealNaCTCDoSoloCalcio() {
-        	assertEquals("45 a 55", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(1));
-        	assertEquals("35 a 40", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(2));
-        	assertEquals("", new CorrecaoCalcio().getParticipacaoIdealNoCTCDoSolo(3));
+        	assertEquals("45 a 55", new CorrecaoCalcio().getParticipacaoIdealNaCTCDoSolo(1));
+        	assertEquals("35 a 40", new CorrecaoCalcio().getParticipacaoIdealNaCTCDoSolo(2));
+        	assertEquals("", new CorrecaoCalcio().getParticipacaoIdealNaCTCDoSolo(3));
         }
         
         @Test
         public void testaValoresIdeaisParaParticipacaoIdealNaCTCDoSoloMagnesio() {
-        	assertEquals("10 a 15", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(1));
-        	assertEquals("8 a 12", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(2));
-        	assertEquals("", new CorrecaoMagnesio().getParticipacaoIdealNoCTCDoSolo(3));
+        	assertEquals("10 a 15", new CorrecaoMagnesio().getParticipacaoIdealNaCTCDoSolo(1));
+        	assertEquals("8 a 12", new CorrecaoMagnesio().getParticipacaoIdealNaCTCDoSolo(2));
+        	assertEquals("", new CorrecaoMagnesio().getParticipacaoIdealNaCTCDoSolo(3));
         }
 
         @Test
         public void testaCalculaSCmol() {
                 assertEquals(7.54, new EquilibrioCorrecaoCTC().calculaSCmol(0.15, 5.76, 1.63));
-
         }
 
         @Test

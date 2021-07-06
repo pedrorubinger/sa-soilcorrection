@@ -10,7 +10,7 @@ public class CorrecaoMagnesio {
 	
 	
 	// N55 = SE(C6=1;"10 a 15";SE(C6=2;"8 a 12";""))
-	public String getParticipacaoIdealNoCTCDoSolo(int texturaDoSolo) { 
+	public String getParticipacaoIdealNaCTCDoSolo(int texturaDoSolo) { 
 		if (texturaDoSolo == 1) {
 			return "10 a 15";
 		}

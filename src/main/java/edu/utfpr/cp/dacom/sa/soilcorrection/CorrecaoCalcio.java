@@ -17,7 +17,7 @@ public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcioMagnesio> {
 	}
 	
 	// E49 = N54 = SE(C6=1;"45 a 55";SE(C6=2;"35 a 40";""))
-	public String getParticipacaoIdealNoCTCDoSolo(int texturaDoSoloId) {
+	public String getParticipacaoIdealNaCTCDoSolo(int texturaDoSoloId) {
 		if (texturaDoSoloId == 1) {
 			return "45 a 55";
 		}
@@ -25,8 +25,24 @@ public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcioMagnesio> {
 		if (texturaDoSoloId == 2) {
 			return "35 a 40";
 		}
-		
+
 		return "";
+	}
+	
+	// V52 = P10 = F11/R6*100
+	// R6 = R5+L11
+	// R5 = F11+H11+D11
+	// F11 = calcio
+	// H11 = magnesio
+	// D11 = potássio
+	// L11 = H + AL = DETERMINAÇÃO DE (H + Al) ou ACIDEZ POTENCIAL segundo laborsolo.com.br
+	public double calculaParticipacaoAtualNaCTCDoSolo(
+		double calcioNoSolo,
+		double magnesioNoSolo,
+		double potassioNoSolo,
+		double acidezPotencialNoSolo
+	) {
+		return calcioNoSolo / (calcioNoSolo + magnesioNoSolo + potassioNoSolo + acidezPotencialNoSolo) * 100;
 	}
 	
 	/* TO DO: Implementar método completo. */

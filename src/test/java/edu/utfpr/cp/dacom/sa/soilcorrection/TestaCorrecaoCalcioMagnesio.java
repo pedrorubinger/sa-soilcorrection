@@ -58,4 +58,21 @@ class TestaCorrecaoCalcioMagnesio {
 
 		assertEquals(1.57208053691, teorASerAdicionado, 0.001);
 	}
+	
+	@Test
+	void testaParticipacaoAtualNaCTCDoSoloCalcio() {
+		var correcaoCalcio = new CorrecaoCalcio();
+		double calcio = 5.76;
+		double magnesio = 1.63;
+		double potassio = 0.15;
+		double acidezPotencial = 5.35;
+		double partAtual = correcaoCalcio.calculaParticipacaoAtualNaCTCDoSolo(
+			calcio,
+			magnesio,
+			potassio,
+			acidezPotencial
+		);
+
+		assertEquals(44.685802948, partAtual, 0.001);
+	}
 }
