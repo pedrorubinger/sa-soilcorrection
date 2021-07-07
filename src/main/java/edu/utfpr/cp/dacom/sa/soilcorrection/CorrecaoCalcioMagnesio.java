@@ -1,6 +1,6 @@
 package edu.utfpr.cp.dacom.sa.soilcorrection;
 
-public class CorrecaoCalcio {
+public class CorrecaoCalcioMagnesio {
 	/**
 	 * ---- NOTAS ----
 	 * 
@@ -17,13 +17,26 @@ public class CorrecaoCalcio {
 	}
 	
 	// E49 = N54 = SE(C6=1;"45 a 55";SE(C6=2;"35 a 40";""))
-	public String getParticipacaoIdealNaCTCDoSolo(int texturaDoSoloId) {
+	public String getParticipacaoIdealNaCTCDoSoloCalcio(int texturaDoSoloId) {
 		if (texturaDoSoloId == 1) {
 			return "45 a 55";
 		}
-		
+
 		if (texturaDoSoloId == 2) {
 			return "35 a 40";
+		}
+
+		return "";
+	}
+	
+	// N55 = SE(C6=1;"10 a 15";SE(C6=2;"8 a 12";""))
+	public String getParticipacaoIdealNaCTCDoSoloMagnesio(int texturaDoSolo) { 
+		if (texturaDoSolo == 1) {
+			return "10 a 15";
+		}
+
+		if (texturaDoSolo == 2) {
+			return "8 a 12";
 		}
 
 		return "";
@@ -36,7 +49,7 @@ public class CorrecaoCalcio {
 	// H11 = magnesio
 	// D11 = potássio
 	// L11 = H + AL = DETERMINAÇÃO DE (H + Al) ou ACIDEZ POTENCIAL segundo laborsolo.com.br
-	public double calculaParticipacaoAtualNaCTCDoSolo(
+	public double calculaParticipacaoAtualNaCTCDoSoloCalcio(
 		double calcioNoSolo,
 		double magnesioNoSolo,
 		double potassioNoSolo,

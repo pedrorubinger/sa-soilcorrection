@@ -11,7 +11,7 @@ class TestaCorrecaoCalcioMagnesio {
 	 */
 	@Test
 	void testaQuantidadeAplicar() {
-		var correcaoCalcio = new CorrecaoCalcio();
+		var correcaoCalcio = new CorrecaoCalcioMagnesio();
 		double prnt = 70.0; // PRNT = Poder Relativo Neutralizante Total
 		double inputD54 = 40.00; // TO DO: Descobrir o que é exatamente este input da célula D54
 		int fonteId = 1;
@@ -33,7 +33,7 @@ class TestaCorrecaoCalcioMagnesio {
 	
 	@Test
 	void testaQtdeDeCaOAdicionadaAtravesDaFosfotagem() {
-		var correcaoCalcio = new CorrecaoCalcio();
+		var correcaoCalcio = new CorrecaoCalcioMagnesio();
 		int fonteDeFosforoId = 1;
 		
 		/* TO DO: Terminar implementação do método. */
@@ -43,7 +43,7 @@ class TestaCorrecaoCalcioMagnesio {
 
 	@Test
 	void testaTeorDeCaOASerAdicionado() {
-		var correcaoCalcio = new CorrecaoCalcio();
+		var correcaoCalcio = new CorrecaoCalcioMagnesio();
 		double qtdeCalcioNoSolo = 5.76;
 		double participacaoNaCTCDesejada = 56.9;
 		double participacaoAtualNaCTCDoSolo = 44.7;
@@ -61,12 +61,12 @@ class TestaCorrecaoCalcioMagnesio {
 	
 	@Test
 	void testaParticipacaoAtualNaCTCDoSoloCalcio() {
-		var correcaoCalcio = new CorrecaoCalcio();
+		var correcaoCalcioMagnesio = new CorrecaoCalcioMagnesio();
 		double calcio = 5.76;
 		double magnesio = 1.63;
 		double potassio = 0.15;
 		double acidezPotencial = 5.35;
-		double partAtual = correcaoCalcio.calculaParticipacaoAtualNaCTCDoSolo(
+		double partAtual = correcaoCalcioMagnesio.calculaParticipacaoAtualNaCTCDoSoloCalcio(
 			calcio,
 			magnesio,
 			potassio,
