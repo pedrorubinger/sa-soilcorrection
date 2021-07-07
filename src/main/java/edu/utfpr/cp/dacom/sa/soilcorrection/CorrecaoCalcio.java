@@ -1,6 +1,6 @@
 package edu.utfpr.cp.dacom.sa.soilcorrection;
 
-public class CorrecaoCalcio implements ICorrecaoNutriente<FonteCalcioMagnesio> {
+public class CorrecaoCalcio {
 	/**
 	 * ---- NOTAS ----
 	 * 
