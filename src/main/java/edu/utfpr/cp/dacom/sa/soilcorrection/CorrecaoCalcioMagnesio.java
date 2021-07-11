@@ -1,22 +1,33 @@
 package edu.utfpr.cp.dacom.sa.soilcorrection;
 
 public class CorrecaoCalcioMagnesio {
-	/**
-	 * ---- NOTAS ----
-	 * 
-	 * CTC = Capacidade de Troca de Cátions
-	 * TEOR DE CÁLCIO A ADICIONAR = (QTDE CÁLCIO NO SOLO * % DE PARTICIPAÇÃO DE CÁLCIO NA CTC DESEJADA / PARTICIP. ATUAL NA CTC DO SOLO) - QTDE CÁLCIO NO SOLO - QUANTIDADE ADICIONADA;
-     */
-	public double calculaTeorDeCaOASerAdicionado(
-		double qtdeCalcioNoSolo,
-		double participacaoNaCTCDesejada,
-		double participacaoAtualNaCTCDoSolo,
-		double qtdeCaOAdicionada
+	private EquilibrioCorrecaoCTC equilibrioCorrecaoCTC = new EquilibrioCorrecaoCTC();
+
+	public double calculaQtdeCaOAdicionadaPorHa( // Cálculo da célula I105
+		int idFonteDeFosforo,
+		double magnesioNoSolo,
+		double fosforoNoSolo,
+		double eficienciaDeFosforo,
+		double teorDeFosforoASerAtingido
 	) {
-		return (qtdeCalcioNoSolo * participacaoNaCTCDesejada / participacaoAtualNaCTCDoSolo) - qtdeCalcioNoSolo - qtdeCaOAdicionada;
+		return (getN27(idFonteDeFosforo, magnesioNoSolo, eficienciaDeFosforo, teorDeFosforoASerAtingido, fosforoNoSolo) / 2.42) * getCTC_AM40(idFonteDeFosforo) / 1000;
 	}
-	
-	// E49 = N54 = SE(C6=1;"45 a 55";SE(C6=2;"35 a 40";""))
+
+	public double calculaTeorDeCaOASerAdicionado(
+		double calcioNoSolo,
+		double magnesioNoSolo,
+		double potassioNoSolo,
+		double fosforoNoSolo,
+		double acidezPotencial,
+		double partDeCalcioNaCTCDesejada,
+		double eficienciaDeFosforo,
+		double teorDeFosforoASerAtingido,
+		int idFonteDeFosforo
+	) {
+		double qtdeCaOAdicionadaPorHa = calculaQtdeCaOAdicionadaPorHa(idFonteDeFosforo, magnesioNoSolo, fosforoNoSolo, eficienciaDeFosforo, teorDeFosforoASerAtingido); // I105
+		return (calcioNoSolo * partDeCalcioNaCTCDesejada / getPartAtualDeCalcioNaCTC(calcioNoSolo, magnesioNoSolo, potassioNoSolo, acidezPotencial)) - calcioNoSolo - qtdeCaOAdicionadaPorHa;
+	}
+
 	public String getParticipacaoIdealNaCTCDoSoloCalcio(int texturaDoSoloId) {
 		if (texturaDoSoloId == 1) {
 			return "45 a 55";
@@ -28,8 +39,7 @@ public class CorrecaoCalcioMagnesio {
 
 		return "";
 	}
-	
-	// N55 = SE(C6=1;"10 a 15";SE(C6=2;"8 a 12";""))
+
 	public String getParticipacaoIdealNaCTCDoSoloMagnesio(int texturaDoSolo) { 
 		if (texturaDoSolo == 1) {
 			return "10 a 15";
@@ -41,117 +51,473 @@ public class CorrecaoCalcioMagnesio {
 
 		return "";
 	}
-	
-	// V52 = P10 = F11/R6*100
-	// R6 = R5+L11
-	// R5 = F11+H11+D11
-	// F11 = calcio
-	// H11 = magnesio
-	// D11 = potássio
-	// L11 = H + AL = DETERMINAÇÃO DE (H + Al) ou ACIDEZ POTENCIAL segundo laborsolo.com.br
+
 	public double calculaParticipacaoAtualNaCTCDoSoloCalcio(
 		double calcioNoSolo,
 		double magnesioNoSolo,
 		double potassioNoSolo,
 		double acidezPotencialNoSolo
 	) {
-		return calcioNoSolo / (calcioNoSolo + magnesioNoSolo + potassioNoSolo + acidezPotencialNoSolo) * 100;
+		return calcioNoSolo / (equilibrioCorrecaoCTC.calculaSCmol(potassioNoSolo, calcioNoSolo, magnesioNoSolo) + acidezPotencialNoSolo) * 100;
 	}
-	
-	/* TO DO: Implementar método completo. */
-	public void calculaQtdeASerAdicionada(
-		double prnt,
-		double teorDeCaO,
-		double inputD54,
-		int fonteId
+
+	public double calculaParticipacaoAtualNaCTCDoSoloMagnesio(
+		double magnesioNoSolo,
+		double calcioNoSolo,
+		double potassioNoSolo,
+		double acidezPotencial
 	) {
-		/*
-		
-		double value = 0;
-		
-		if (inputD54 > 0.01) {
-			value = inputD54;
+		return magnesioNoSolo / (equilibrioCorrecaoCTC.calculaSCmol(potassioNoSolo, calcioNoSolo, magnesioNoSolo) + acidezPotencial) * 100;
+	}
+
+	// MEM CALC G109
+	public double getQtdeTotalDeCalcioAdicionada(
+		double teorDeCaODoCorretivo, // INPUT D54 = G101
+		int idFonteDeCorretivo,
+		int idFonteDeFosforo,
+		double magnesioNoSolo,
+		double eficienciaDeFosforo,
+		double fosforoNoSolo,
+		double teorDeFosforoASerAtingido,
+		double qtdeCaOAdicionadaPorHa
+	) {
+		// G102 = SE(G101>0,01;G101;J102)
+		double G102 = 0;
+
+		if (teorDeCaODoCorretivo > 0.01) {
+			G102 = teorDeCaODoCorretivo;
 		} else {
-			value = 1;
+			switch(idFonteDeCorretivo) {
+				case 1:
+					G102 = 30.4;
+					break;
+				case 2:
+					G102 = 56;
+					break;
+				case 3:
+					G102 = 54;
+					break;
+				case 4:
+					G102 = 29;
+					break;
+				case 5:
+					G102 = 75.7;
+					break;
+				case 6:
+					G102 = 35;
+					break;
+				default:
+					G102 = 0;
+					break;
+			}
 		}
 
-		if (teorDeCaO / ((value * 0.01783) + (I105 * A105 / 1000))) {
-			
-		}
+		double qtdeDeCalcioAdicionadaPorToneladaDeCorretivo = G102 * 0.01783; // I107
 
-		*/
+		return qtdeDeCalcioAdicionadaPorToneladaDeCorretivo + qtdeCaOAdicionadaPorHa; // I107 + I105
 	}
 	
-	/* TO DO: Implementar método completo */
-	public double calculaQtdeDeCaOAdicionadaAtravesDaFosfotagem(
-		int fonteDeFosforoId
+	public double getQ72(double teorDeFosforoASerAtingido, double fosforoNoSolo) {
+		double E10 = teorDeFosforoASerAtingido - fosforoNoSolo;
+
+		if (E10 < 0.01) {
+			return 0;
+		} else {
+			return E10;
+		}
+	}
+
+	// =SE(D23=1;'Memória de cálculo'!B24*0,28;SE(D23=2;'Memória de cálculo'!B24*0,2;SE(D23=3;'Memória de cálculo'!B24*0,09;SE(D23=4;'Memória de cálculo'!B24*0,16;SE(D23=5;'Memória de cálculo'!B24*0,28;SE(D23=6;'Memória de cálculo'!B24*0,52;SE(D23>=7;N28;"")))))))
+	// N28=SE(D23=7;'Memória de cálculo'!B24*0,52;SE(D23=8;'Memória de cálculo'!B24*0,45;SE(D23=9;'Memória de cálculo'!B24*0,28;SE(D23=10;'Memória de cálculo'!B24*0,44;SE(D23=11;'Memória de cálculo'!B24*0;SE(D23=12;'Memória de cálculo'!B24*0,18;""))))))
+	public double getN27(
+		int idFonteDeFosforo,
+		double magnesioNoSolo,
+		double eficienciaDeFosforo,
+		double teorDeFosforoASerAtingido,
+		double fosforoNoSolo
 	) {
-		/* if (fonteDeFosforoId == 1) {
-			(H11*2*2.29*100/F15/100)*100/G20 * 2.42;
+		// double G20 = 0;
+		double teorDeP2O5DaFonte = 0;
+		
+		// G20 = =SE(D23=1;"18";SE(D23=2;"41";SE(D23=3;"48";SE(D23=4;"45";SE(D23=5;"18";SE(D23=6;"33";SE(D23>=7;AL41;"")))))))
+		switch(idFonteDeFosforo) {
+			case 1:
+				teorDeP2O5DaFonte = 18;
+				break;
+			case 2:
+				teorDeP2O5DaFonte = 41;
+				break;
+			case 3:
+				teorDeP2O5DaFonte = 48;
+				break;
+			case 4:
+				teorDeP2O5DaFonte = 45;
+				break;
+			case 5:
+				teorDeP2O5DaFonte = 18;
+				break;
+			case 6:
+				teorDeP2O5DaFonte = 33;
+				break;
+		}
+		
+		// =SE(D23=7;"29";SE(D23=8;"32";SE(D23=9;"24";SE(D23=10;"18,5";SE(D23=11;"52";SE(D23=12;"18";""))))))
+		if (idFonteDeFosforo == 7) {
+			switch(idFonteDeFosforo) {
+				case 7:
+					teorDeP2O5DaFonte = 29;
+					break;
+				case 8:
+					teorDeP2O5DaFonte = 32;
+					break;
+				case 9:
+					teorDeP2O5DaFonte = 24;
+					break;
+				case 10:
+					teorDeP2O5DaFonte = 18.5;
+					break;
+				case 11:
+					teorDeP2O5DaFonte = 52;
+					break;
+				case 12:
+					teorDeP2O5DaFonte = 18;
+					break;
+				default:
+					teorDeP2O5DaFonte = 0;
+			}
+		}
+		
+		// H11 = magnesio
+		// H16 = magnesioNoSolo*2*2.29*100/eficienciaDeFosforo/100
+		// B24 = B22*2,42
+		// B22 = H16*100/G20
+		// H16 = G14*100/F15/100
+		// G14 = H12*2,29
+		// b24 = ((((getQ72() *2) * 2.29) * 100 / eficienciaDeFosforo / 100) * 100 / G20) * 2.42;
+		// MEM CALC B24 = ((magnesioNoSolo*2*2.29*100/eficienciaDeFosforo/100) * 100 / G20) * 2.42
+		
+		// double qtdeEmKgPorAlqueireParaAplicar = ((magnesioNoSolo * 2 * 2.29 * 100 / eficienciaDeFosforo / 100) * 100 / G20) * 2.42;
+		double qtdeEmKgPorAlqueireParaAplicar = (((((getQ72(teorDeFosforoASerAtingido, fosforoNoSolo) *2) * 2.29) * 100 / eficienciaDeFosforo / 100) * 100 / teorDeP2O5DaFonte) * 2.42) * 100;
+
+		if (idFonteDeFosforo >= 7) {
+			switch(idFonteDeFosforo) {
+				case 7:
+					return qtdeEmKgPorAlqueireParaAplicar * 0.52;
+				case 8:
+					return qtdeEmKgPorAlqueireParaAplicar * 0.45;
+				case 9:
+					return qtdeEmKgPorAlqueireParaAplicar * 0.28;
+				case 10:
+					return qtdeEmKgPorAlqueireParaAplicar * 0.44;
+				case 11:
+					return 0;
+				case 12:
+					return qtdeEmKgPorAlqueireParaAplicar * 0.18;
+				default:
+					return 0;
+			}
+		}
+		
+		switch(idFonteDeFosforo) {
+			case 1:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.28;
+			case 2:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.2;
+			case 3:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.09;
+			case 4:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.16;
+			case 5:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.28;
+			case 6:
+				return qtdeEmKgPorAlqueireParaAplicar * 0.52;
+			default:
+				return 0;
+		}
+	}
+
+	public double getCTC_AM40(int idFonteDeFosforo) {
+		// =SE(D23=7;"0,92716";SE(D23=8;"0,80235";SE(D23=9;"0,49924";SE(D23=10;"0,795218";SE(D23=11;"0,0";SE(D23=12;"0,0";""))))))
+		if (idFonteDeFosforo >= 7) {
+			switch(idFonteDeFosforo) {
+				case 7:
+					return 0.92716;
+				case 8:
+					return 0.80235;
+				case 9:
+					return 0.49924;
+				case 10:
+					return 0.795218;
+				case 11:
+				case 12:
+					return 0;
+			}
+		}
+
+		// AM40 = =SE(D23=1;"0,49924";SE(D23=2;"0,33877";SE(D23=3;"0,0";SE(D23=4;"0,0";SE(D23=5;"0,49924";SE(D23=6;"0,92716";SE(D23>=7;AM41;"")))))))
+		switch(idFonteDeFosforo) {
+			case 1:
+				return 0.49924;
+			case 2:
+				return 0.33877;
+			case 3:
+			case 4:
+				return 0;
+			case 5:
+				return 0.49924;
+			case 6:
+				return 0.92716;
+			default:
+				return 0;
+		}
+	}
+	
+	// G101 = TEOR DE CaO do corretivo
+	// I107 = E101*0,01783
+	// E101 = G102 = SE(G101>0,01;G101;J102)
+	// J102 = CTC O102 = =SE(D52=1;"30,4";SE(D52=2;"56";SE(D52=3;"54";SE(D52=4;"29";SE(D52=5;"75,7";SE(D52=6;"35";""))))))
+	
+	// CÉLULA MEM CALC I107 = qtde de calcio adicionada por tonelada de corretivo
+	public double getQtdeCalcioAdicionadaPorTonDeCorretivo(double teorDeCaOCorretivo, int idFonteDeCorretivo) {
+		double teorDeCaoCorretivoEmPorcentagem = teorDeCaOCorretivo;
+		
+		if (teorDeCaOCorretivo > 0.01) {
+			return teorDeCaoCorretivoEmPorcentagem * 0.01783;
+		}
+
+		switch(idFonteDeCorretivo) {
+			case 1:
+				teorDeCaoCorretivoEmPorcentagem = 30.4;
+				break;
+			case 2:
+				teorDeCaoCorretivoEmPorcentagem = 56;
+				break;
+			case 3:
+				teorDeCaoCorretivoEmPorcentagem = 54;
+				break;
+			case 4:
+				teorDeCaoCorretivoEmPorcentagem = 29;
+				break;
+			case 5:
+				teorDeCaoCorretivoEmPorcentagem = 75.7;
+				break;
+			case 6:
+				teorDeCaoCorretivoEmPorcentagem = 35;
+				break;
+			default:
+				teorDeCaoCorretivoEmPorcentagem = 0;
+		}
+
+		return teorDeCaoCorretivoEmPorcentagem * 0.01783;
+	}
+	
+	public double calculaCustoEmReaisPorHectare(
+		int idFonteDeCorretivo,
+		double teorDeCaODoCorretivo,
+		int idFonteDeFosforo,
+		double magnesioNoSolo,
+		double eficienciaDeFosforo,
+		double calcioNoSolo,
+		double potassioNoSolo,
+		double acidezPotencial,
+		double PRNT,
+		double partDeCalcioNaCTCDesejada,
+		double valorEmReaisPorTonelada,
+		double fosforoNoSolo,
+		double teorDeFosforoASerAtingido
+	) {
+		double teorDeCaOASerAdicionado = calculaTeorDeCaOASerAdicionado(
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			fosforoNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			eficienciaDeFosforo,
+			teorDeFosforoASerAtingido,
+			idFonteDeFosforo
+		);
+		double qtdeCaOAdicionadaPorHa = calculaQtdeCaOAdicionadaPorHa(
+			idFonteDeFosforo,
+			magnesioNoSolo,
+			fosforoNoSolo,
+			eficienciaDeFosforo,
+			teorDeFosforoASerAtingido
+		);
+		double qtdeTotalDeCalcioAdicionada = getQtdeTotalDeCalcioAdicionada(
+			teorDeCaODoCorretivo,
+			idFonteDeCorretivo,
+			idFonteDeFosforo,
+			magnesioNoSolo,
+			eficienciaDeFosforo,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido,
+			qtdeCaOAdicionadaPorHa
+		);
+		double P91 = teorDeCaOASerAdicionado / qtdeTotalDeCalcioAdicionada;
+		double P104 = 0;
+		double qtdeCorretivoAIncorporar = getQtdeCorretivoAIncorporar(
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			teorDeCaODoCorretivo,
+			idFonteDeCorretivo,
+			idFonteDeFosforo,
+			eficienciaDeFosforo,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido
+		);
+
+		double qtdeEmToneladasPorAlqueire = (qtdeCorretivoAIncorporar * 100 / PRNT) * 2.42; // A116
+
+		/*
+		if (idFonteDeCorretivo == 1) {
+			P104 = A116 / valorEmReaisPorTonelada // CalcarioDom;
+		}
+
+		if (idFonteDeCorretivo == 2) {
+			P104 = A116 * valorEmReaisPorTonelada // CalcarioCalcitico;
+		}
+
+		if (idFonteDeCorretivo == 3) {
+			P104 = A116 * valorEmReaisPorTonelada // CalcarioDeConcha;
+		}
+
+		if (idFonteDeCorretivo == 4) {
+			P104 = A116 * valorEmReaisPorTonelada // GessoAgricola;
+		}
+
+		if (idFonteDeCorretivo == 5) {
+			P104 = A116 * valorEmReaisPorTonelada // HidroxidoDeCalcio;
+		}
+
+		if (idFonteDeCorretivo == 6) {
+			P104 = A116 * valorEmReaisPorTonelada // HidroxidoDeCalcarioMagnesiano;
 		} */
-		return 0.0;
+
+		if (idFonteDeCorretivo == 7) {
+			P104 = qtdeEmToneladasPorAlqueire * 44;
+		} else if (idFonteDeCorretivo > 0) {
+			P104 = qtdeEmToneladasPorAlqueire * valorEmReaisPorTonelada;
+		}
+
+		return P104 / 2.42;
+	}
+	
+	public double getPartAtualDeCalcioNaCTC(double calcioNoSolo, double magnesioNoSolo, double potassioNoSolo, double acidezPotencial) {
+		return calcioNoSolo / (calcioNoSolo + magnesioNoSolo + potassioNoSolo + acidezPotencial) * 100;
+	}
+	
+	public double getQtdeCorretivoAIncorporar(
+		double calcioNoSolo,
+		double magnesioNoSolo,
+		double potassioNoSolo,
+		double acidezPotencial,
+		double partDeCalcioNaCTCDesejada,
+		double teorDeCaODoCorretivo,
+		int idFonteDeCorretivo,
+		int idFonteDeFosforo,
+		double eficienciaDeFosforo,
+		double fosforoNoSolo,
+		double teorDeFosforoASerAtingido
+	) {
+		double qtdeCaOAdicionadaPorHa = calculaQtdeCaOAdicionadaPorHa(
+			idFonteDeFosforo,
+			magnesioNoSolo,
+			fosforoNoSolo,
+			eficienciaDeFosforo,
+			teorDeFosforoASerAtingido
+		); // I105
+		double teorDeCaOASerAdicionado = calculaTeorDeCaOASerAdicionado(
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			fosforoNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			eficienciaDeFosforo,
+			teorDeFosforoASerAtingido,
+			idFonteDeFosforo
+		);
+		double qtdeTotalDeCalcioAdicionada = getQtdeTotalDeCalcioAdicionada(
+			teorDeCaODoCorretivo, // INPUT D54 = G101
+			idFonteDeCorretivo,
+			idFonteDeFosforo,
+			magnesioNoSolo,
+			eficienciaDeFosforo,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido,
+			qtdeCaOAdicionadaPorHa // I105
+		);
+		double P91 = teorDeCaOASerAdicionado / qtdeTotalDeCalcioAdicionada;
+		// F96 = =('EQUILIBRIO E CORREÇÃO NA CTC'!F11*'EQUILIBRIO E CORREÇÃO NA CTC'!E51/'EQUILIBRIO E CORREÇÃO NA CTC'!E48)-'EQUILIBRIO E CORREÇÃO NA CTC'!F11-I105
+		// P91 = 'Memória de cálculo'!F96/'Memória de cálculo'!G109
+		// P88 = =SE(P91>0,001;P91;SE(P91<=13;"0,0"))
+		// =SE(P88>0,0001;P88;"0,0")
+		double P88 = 0;
+		
+		if (P91 > 0.001) {
+			P88 = P91;
+		} else if (P91 <= 13) {
+			P88 = 0;
+		}
+		
+		if (P88 > 0.0001) {
+			return P88;
+		} else {
+			return 0;
+		}
+	}
+
+	public double calculaQuantidadeASerAplicada(
+		double PRNT,
+		double calcioNoSolo,
+		double magnesioNoSolo,
+		double potassioNoSolo,
+		double acidezPotencial,
+		double partDeCalcioNaCTCDesejada,
+		double teorDeCaODoCorretivo,
+		int idFonteDeCorretivo,
+		int idFonteDeFosforo,
+		double eficienciaDeFosforo,
+		double fosforoNoSolo,
+		double teorDeFosforoASerAtingido
+	) {
+		double qtdeCorretivoAIncorporar = getQtdeCorretivoAIncorporar(
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			teorDeCaODoCorretivo,
+			idFonteDeCorretivo,
+			idFonteDeFosforo,
+			eficienciaDeFosforo,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido
+		);
+
+		return qtdeCorretivoAIncorporar * 100 / PRNT;
 	}
 }
 
-/**
-  -------------------------- RASCUNHOS E NOTAS ----------------------------------
- 
-  - CÁLCULO DE QUANTIDADE A APLICAR
-	- VARIA COM A FONTE, PRNT, % de participação do CÁLCIO na CTC, desejada: MÍNIMO DE 44.8, 
-	- noSolo (h13) / R6 * 100
-	
-	- QUANTIDADE DE CORRETIVO A INCORPORAR: =SE(P88>0,0001;P88;"0,0")
-	P88 = SE(P91>0,001;P91;SE(P91<=13;"0,0"))
-	
-	- TEOR DE CÁLCIO A ADICIONAR = ('EQUILIBRIO E CORREÇÃO NA CTC'!F11*'EQUILIBRIO E CORREÇÃO NA CTC'!E51/'EQUILIBRIO E CORREÇÃO NA CTC'!E48)-'EQUILIBRIO E CORREÇÃO NA CTC'!F11-I105
-	
-	-> TEOR DE CÁLCIO A ADICIONAR = (QTDE CÁLCIO NO SOLO * % DE PARTICIPAÇÃO DE CÁLCIO NA CTC DESEJADA / PARTICIP. ATUAL NA CTC DO SOLO) - QTDE CÁLCIO NO SOLO - QUANTIDADE ADICIONADA;
-	
-	----------------------------------------------------------------------------------------------------------------------------------------------
-	-> QUANTIDADE DE CaO ADCIONADA ATRAVES DA FOSFOTAGEM = 'EQUILIBRIO E CORREÇÃO NA CTC'!P129*A105/1000
-	
-	I105 = M22 / 2,42
-	=SE(FONTE DE FOSFORO A UTILIZAR=1;'Memória de cálculo'!B24*0,28;SE(D23=2;'Memória de cálculo'!B24*0,2;SE(D23=3;'Memória de cálculo'!B24*0,09;SE(D23=4;'Memória de cálculo'!B24*0,16;SE(D23=5;'Memória de cálculo'!B24*0,28;SE(D23=6;'Memória de cálculo'!B24*0,52;SE(D23>=7;N28;""))))))) / 2,42
-	
-	1. EQUILIBRIO E CORREÇÃO NA CTC'!P129*A105/1000
-	2. CTC P129 = M22/2,42
-	3. M22 = N27
-	4. N27 = SE(D23=1;'Memória de cálculo'!B24*0,28;SE(D23=2;'Memória de cálculo'!B24*0,2;SE(D23=3;'Memória de cálculo'!B24*0,09;SE(D23=4;'Memória de cálculo'!B24*0,16;SE(D23=5;'Memória de cálculo'!B24*0,28;SE(D23=6;'Memória de cálculo'!B24*0,52;SE(D23>=7;N28;"")))))))
-	5. MEM B24 = B22*2,42
-	6. MEM B22 = H16*100/G20
-	7. MEM H16 = G14*100/F15/100
-	8. G20 = EQUILIBRIO E CORREÇÃO NA CTC !AL40
-	9. AL40 = SE(D23=1;"18";SE(D23=2;"41";SE(D23=3;"48";SE(D23=4;"45";SE(D23=5;"18";SE(D23=6;"33";SE(D23>=7;AL41;"")))))))
-	10. AL41 = SE(D23=7;"29";SE(D23=8;"32";SE(D23=9;"24";SE(D23=10;"18,5";SE(D23=11;"52";SE(D23=12;"18";""))))))
-	11. G14 = H12*2,29
-	12. H12 = 'EQUILIBRIO E CORREÇÃO NA CTC'!N72
-	13. N72 = N71 = 'Memória de cálculo'!H11*2
-	14. H11 = C12 = 'EQUILIBRIO E CORREÇÃO NA CTC'!Q72
-	15. CTC Q72 = SE('Memória de cálculo'!E10<0,01;"0,0";'Memória de cálculo'!E10)
-	13. F15 = 'EQUILIBRIO E CORREÇÃO NA CTC'!D25
-	----------------------------------------------------------------------------------------------------------------------------------------------
-	
-	-> QUANTIDADE A APLICAR
-	1. T70*100/PRNT
-	2. T70 = MEM F113
-	3. MEM F113 = CTC O117
-	4. CTC O117 = SE(P88>0,0001;P88;"0,0")
-	5. P88 = SE(P91>0,001;P91;SE(P91<=13;"0,0"))
-	6. P91 = 'Memória de cálculo'!F96/'Memória de cálculo'!G109
-	7. F96 = Teor de CaO a adicionar
-	8. g109 = I107+I105
-	9. I107 = E101*0,01783
-	10. E101 = G102
-	11. G102 = SE(G101>0,01;G101;J102)
-	12. G101 = EQUILIBRIO E CORREÇÃO NA CTC'!D54
-	13. CTC D54 = INPUT DE DADOS
-	13. J102 = EQUILIBRIO E CORREÇÃO NA CTC'!O102
-	13. CTC O102 = SE(D52=1;"30,4";SE(D52=2;"56";SE(D52=3;"54";SE(D52=4;"29";SE(D52=5;"75,7";SE(D52=6;"35";""))))))
-	
-	14. I105 = EQUILIBRIO E CORREÇÃO NA CTC'!P129*A105/1000
-	15. P129 = M22/2,42
-	16. M22 = N27
-	17. N27 = SE(D23=1;'Memória de cálculo'!B24*0,28;SE(D23=2;'Memória de cálculo'!B24*0,2;SE(D23=3;'Memória de cálculo'!B24*0,09;SE(D23=4;'Memória de cálculo'!B24*0,16;SE(D23=5;'Memória de cálculo'!B24*0,28;SE(D23=6;'Memória de cálculo'!B24*0,52;SE(D23>=7;N28;"")))))))
-	18. 
+// CALCULAR CUSTO EM REAIS POR HECTARE
 
-*/
+// CALC MEM A116*K54
+// A116 = F113*100/'EQUILIBRIO E CORREÇÃO NA CTC'!C53 *2,42
+// F113 = SE(P88>0,0001;P88;"0,0")
+// P88 = SE(P91>0,001;P91;SE(P91<=13;"0,0"))
+// P91 = 'Memória de cálculo'!F96/'Memória de cálculo'!G109
+// Mem CALC F96 = Teor de CaO a adicionar
+// Mem CALC G109 = I107+I105
+// I107 = E101*0,01783
+// E101 = G102 = SE(G101>0,01;G101;J102)
+// G101 = TEOR DE CaO do corretivo
+// I105 = 'EQUILIBRIO E CORREÇÃO NA CTC'!P129*A105/1000
+
+// N27 = =SE(D23=1;'Memória de cálculo'!B24*0,28;SE(D23=2;'Memória de cálculo'!B24*0,2;SE(D23=3;'Memória de cálculo'!B24*0,09;SE(D23=4;'Memória de cálculo'!B24*0,16;SE(D23=5;'Memória de cálculo'!B24*0,28;SE(D23=6;'Memória de cálculo'!B24*0,52;SE(D23>=7;N28;"")))))))
+// D23 = idFonteDeFosforo
+// AM40 = =SE(D23=1;"0,49924";SE(D23=2;"0,33877";SE(D23=3;"0,0";SE(D23=4;"0,0";SE(D23=5;"0,49924";SE(D23=6;"0,92716";SE(D23>=7;AM41;"")))))))
+// I105 = N27/2,42 * AM40/1000

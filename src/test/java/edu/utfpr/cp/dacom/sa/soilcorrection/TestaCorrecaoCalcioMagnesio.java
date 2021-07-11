@@ -4,59 +4,33 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class TestaCorrecaoCalcioMagnesio {
-
-	/**
-	 * Varia com a fonte, PRNT, % de participação do CÁLCIO na CTC desejada (aparentemente no mínimo 44.8)
-	 */
-	@Test
-	void testaQuantidadeAplicar() {
-		var correcaoCalcio = new CorrecaoCalcioMagnesio();
-		double prnt = 70.0; // PRNT = Poder Relativo Neutralizante Total
-		double inputD54 = 40.00; // TO DO: Descobrir o que é exatamente este input da célula D54
-		int fonteId = 1;
-
-		double qtdeCalcioNoSolo = 5.76;
-		double participacaoNaCTCDesejada = 56.9;
-		double participacaoAtualNaCTCDoSolo = 44.7;
-		double qtdeCaOAdicionada = 0.00;
-		double teorDeCaO = correcaoCalcio.calculaTeorDeCaOASerAdicionado(
-			qtdeCalcioNoSolo,
-			participacaoNaCTCDesejada,
-			participacaoAtualNaCTCDoSolo,
-			qtdeCaOAdicionada
-		);
-		
-		/* TO DO: Terminar implementação do método. */
-		correcaoCalcio.calculaQtdeASerAdicionada(prnt, teorDeCaO, inputD54, fonteId);
-	}
-	
-	@Test
-	void testaQtdeDeCaOAdicionadaAtravesDaFosfotagem() {
-		var correcaoCalcio = new CorrecaoCalcioMagnesio();
-		int fonteDeFosforoId = 1;
-		
-		/* TO DO: Terminar implementação do método. */
-		correcaoCalcio.calculaQtdeDeCaOAdicionadaAtravesDaFosfotagem(fonteDeFosforoId);
-		// FonteCalcio.CALCARIO_DOLOMITICO.getTeorFonte()
-	}
-
+class TestaCorrecaoCalcioMagnesio {	
 	@Test
 	void testaTeorDeCaOASerAdicionado() {
 		var correcaoCalcio = new CorrecaoCalcioMagnesio();
-		double qtdeCalcioNoSolo = 5.76;
-		double participacaoNaCTCDesejada = 56.9;
-		double participacaoAtualNaCTCDoSolo = 44.7;
-		double qtdeCaOAdicionada = 0.00; // calculaQtdeDeCaOAdicionadaAtravesDaFosfotagem(...);
+		int idFonteDeFosforo = 1;
+		double magnesioNoSolo = 1.63;
+		double calcioNoSolo = 5.76;
+		double potassioNoSolo = 0.15;
+		double acidezPotencial = 5.35;
+		double eficienciaDeFosforo = 70;
+		double partDeCalcioNaCTCDesejada = 55;
+		double fosforoNoSolo = 8.59;
+		double teorDeFosforoASerAtingido = 12;
 
 		double teorASerAdicionado = correcaoCalcio.calculaTeorDeCaOASerAdicionado(
-			qtdeCalcioNoSolo,
-			participacaoNaCTCDesejada,
-			participacaoAtualNaCTCDoSolo,
-			qtdeCaOAdicionada
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			fosforoNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			eficienciaDeFosforo,
+			teorDeFosforoASerAtingido,
+			idFonteDeFosforo
 		);
 
-		assertEquals(1.57208053691, teorASerAdicionado, 0.001);
+		assertEquals(1.312, teorASerAdicionado, 0.01);
 	}
 	
 	@Test
@@ -74,5 +48,95 @@ class TestaCorrecaoCalcioMagnesio {
 		);
 
 		assertEquals(44.685802948, partAtual, 0.001);
+	}
+	
+	// Planilha de Exemplo 03
+	@Test
+	void testaParticipacaoAtualNaCTCDoSoloMagnesio() {
+		var correcaoCalcioMagnesio = new CorrecaoCalcioMagnesio();
+		double calcio = 12.45;
+		double magnesio = 3.47;
+		double potassio = 0.82;
+		double acidezPotencial = 5.15;
+		double partAtual = correcaoCalcioMagnesio.calculaParticipacaoAtualNaCTCDoSoloMagnesio(
+			magnesio,
+			calcio,
+			potassio,
+			acidezPotencial
+		);
+
+		assertEquals(15.9, partAtual, 0.1);
+	}
+	
+	// Planilha de Exemplo 01
+	@Test
+	void testaQuantidadeASerAplicada() {
+		var correcaoCalcioMagnesio = new CorrecaoCalcioMagnesio();
+		
+		double PRNT = 70;
+		double calcioNoSolo = 5.76;
+		double magnesioNoSolo = 1.63;
+		double potassioNoSolo = 0.15;
+		double acidezPotencial = 5.35;
+		double partDeCalcioNaCTCDesejada = 55;
+		double teorDeCaODoCorretivo = 0;
+		int idFonteDeCorretivo = 2;
+		int idFonteDeFosforo = 1;
+		double eficienciaDeFosforo = 70;
+		double fosforoNoSolo = 8.59;
+		double teorDeFosforoASerAtingido = 12;
+		
+		double qtde = correcaoCalcioMagnesio.calculaQuantidadeASerAplicada(
+			PRNT,
+			calcioNoSolo,
+			magnesioNoSolo,
+			potassioNoSolo,
+			acidezPotencial,
+			partDeCalcioNaCTCDesejada,
+			teorDeCaODoCorretivo,
+			idFonteDeCorretivo,
+			idFonteDeFosforo,
+			eficienciaDeFosforo,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido
+		);
+		assertEquals(1.85, qtde, 0.01);
+	}
+	
+	// Planilha de Exemplo 01
+	@Test
+	void testaCalculoDoCustoEmReaisPorHectare() {
+		var correcaoCalcioMagnesio = new CorrecaoCalcioMagnesio();
+		int idFonteDeCorretivo = 2;
+		double teorDeCaODoCorretivo = 0;
+		int idFonteDeFosforo = 1;
+		double magnesioNoSolo = 1.63;
+		double eficienciaDeFosforo = 70;
+		double calcioNoSolo = 5.76;
+		double potassioNoSolo = 0.15;
+		double acidezPotencial = 5.35;
+		double PRNT = 70;
+		double partDeCalcioNaCTCDesejada = 55;
+		double valorEmReaisPorTonelada = 500;
+		double fosforoNoSolo = 8.59;
+		double teorDeFosforoASerAtingido = 12;
+
+		double custo = correcaoCalcioMagnesio.calculaCustoEmReaisPorHectare(
+			idFonteDeCorretivo,
+			teorDeCaODoCorretivo,
+			idFonteDeFosforo,
+			magnesioNoSolo,
+			eficienciaDeFosforo,
+			calcioNoSolo,
+			potassioNoSolo,
+			acidezPotencial,
+			PRNT,
+			partDeCalcioNaCTCDesejada,
+			valorEmReaisPorTonelada,
+			fosforoNoSolo,
+			teorDeFosforoASerAtingido
+		);
+	
+		assertEquals(922.68, custo, 0.01);
 	}
 }
