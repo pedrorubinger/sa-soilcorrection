@@ -1,13 +1,17 @@
 package edu.utfpr.cp.dacom.sa.soilcorrection;
 
 import org.junit.jupiter.api.Test;
+
+import edu.utfpr.cp.dacom.sa.soilcorrection.correcao.EquilibrioCorrecaoCTC;
+import edu.utfpr.cp.dacom.sa.soilcorrection.nutriente.NutrientesCTC;
+import edu.utfpr.cp.dacom.sa.soilcorrection.solo.TexturaSolo;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestaValoresIdeais {
 
         @Test
         public void testaValoresIdeaisArgiloso() {
-        		// 9.0, 0.35, 6.0, 1.5, 9.0, 0.0, 0.0
                 assertEquals(NutrientesCTC.builder().fosforo(9.0).potassio(0.35).calcio(6.0).magnesio(1.5).enxofre(9.0).aluminio(0.0).aluminioHidrogenio(0.0).build().fosforo(),
                 				TexturaSolo.ARGILOSO.calculaValorIdeal().fosforo());
 
@@ -28,7 +32,6 @@ public class TestaValoresIdeais {
 
         @Test
         public void testaValoresIdeaisTexturaMedia() {
-        		// 12.0, 0.25, 3.0, 1.0, 6.0, 0.0, 0.0
                 assertEquals(NutrientesCTC.builder().fosforo(12.0).potassio(0.25).calcio(3.0).magnesio(1.0).enxofre(6.0).aluminio(0.0).aluminioHidrogenio(0.0).build().fosforo(),
                                 TexturaSolo.TEXTURA_MEDIA.calculaValorIdeal().fosforo());
                 assertEquals(NutrientesCTC.builder().fosforo(12.0).potassio(0.25).calcio(3.0).magnesio(1.0).enxofre(6.0).aluminio(0.0).aluminioHidrogenio(0.0).build().aluminio(),

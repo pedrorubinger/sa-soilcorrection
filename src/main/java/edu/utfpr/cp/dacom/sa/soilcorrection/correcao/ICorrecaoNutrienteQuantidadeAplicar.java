@@ -1,5 +1,6 @@
-package edu.utfpr.cp.dacom.sa.soilcorrection;
+package edu.utfpr.cp.dacom.sa.soilcorrection.correcao;
 
+import edu.utfpr.cp.dacom.sa.soilcorrection.fonte.IFonteNutriente;
 import lombok.NonNull;
 
 public interface ICorrecaoNutrienteQuantidadeAplicar<T extends IFonteNutriente> {
